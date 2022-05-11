@@ -1,0 +1,11 @@
+{
+  "name": "eleftheria-leads",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/jsip/not-linkedin-scraper.git",
+  "author": "jsip <jsimonroyer@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.10"
+  }
+}

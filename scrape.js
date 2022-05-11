@@ -8,7 +8,6 @@ interval = setInterval(() => {
   if (i == 100) {
     // Stop the interval if the page number is 100
     clearInterval(interval);
-    console.log(results);
     return results;
   }
 
@@ -31,18 +30,6 @@ interval = setInterval(() => {
       result["timeInPosition"] = children[child].children[1].children[3] ? children[child].children[1].children[3].innerText : null;
       result["geoLocation"] = children[child].children[1].children[4] ? children[child].children[1].children[4].innerText : null;
 
-      window.open(result["salesNavUrl"]);
-
-      $("div.artdeco-dropdown__content-inner")[0].firstElementChild.children[3].firstElementChild.click()
-
-      setTimeout(() => {
-        navigator.clipboard.readText().then(val => {
-          result["profileUrl"] = val;
-        })
-      }, 500);
-
-      window.history.back()
-
       // Append the prospect object to the results list
       results.push(result);
       // continue to the next prospect until all 25 are scraped
@@ -50,7 +37,6 @@ interval = setInterval(() => {
 
     // Increment page number
     i++;
-    console.log(results);
 
     // Set a second timeout of 3s
     setTimeout(() => {
@@ -60,7 +46,6 @@ interval = setInterval(() => {
       if (!nextPageBtn) {
         // Stop the interval if there is no next page button
         clearInterval(interval);
-        console.log(results);
         return results;
       }
 
