@@ -6,6 +6,8 @@
   "author": "jsip <jsimonroyer@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "cheerio": "^1.0.0-rc.10"
+    "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.10",
+    "dotenv": "^16.0.1"
   }
 }

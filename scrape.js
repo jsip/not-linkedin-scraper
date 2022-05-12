@@ -3,8 +3,17 @@ results = []
 // Initial page
 i = 1
 
-// Start interval to loop throughout pages, set to 10 seconds
 interval = setInterval(() => {
+  let k = 0;
+  scrollInterval = setInterval(async () => {
+    if (k == 12) {
+      clearInterval(scrollInterval);
+      return;
+    }
+    $("#search-results-container")[0].scroll(0, 500 * k);
+    k++;
+  }, 500);
+
   if (i == 100) {
     // Stop the interval if the page number is 100
     clearInterval(interval);
@@ -12,36 +21,37 @@ interval = setInterval(() => {
   }
 
   // Scroll to bottom to load all results
-  $("html, body").animate({ scrollTop: jQuery(window).height() * 8}, 3000);
   // Set first timeout of 3s to give it time to scroll down
   setTimeout(() => {
     // Get all prospects
-    children = $("div.horizontal-person-entity-lockup-4");
+    children = document.querySelector("#search-results-container").children[0].children[2].children
     // Loop through all prospects
-    children.each((child) => {
+    Array.prototype.forEach.call(children, child => {
       // Create a new prospect object
       result = {};
       // Append all data to the prospect object
-      result["salesNavUrl"] = children[child].firstElementChild.firstChild.nextSibling.href;
-      result["profileName"] = children[child].children[1].children[0].innerText;
-      result["profileTitle"] = children[child].children[1].children[2].children[0].innerText;
-      result["companyName"] = children[child].children[1].children[2].children[1] ? children[child].children[1].children[2].children[1].children[0].children[0].innerText.split('\n')[0].trim() : null;
-      result["companyUrl"] = children[child].children[1].children[2].children[1] ? children[child].children[1].children[2].children[1].children[0].children[0].href : null;
-      result["timeInPosition"] = children[child].children[1].children[3] ? children[child].children[1].children[3].innerText : null;
-      result["geoLocation"] = children[child].children[1].children[4] ? children[child].children[1].children[4].innerText : null;
+      base = child.firstElementChild.firstElementChild.children[1].firstElementChild.firstElementChild.firstElementChild
+      result["salesNavUrl"] = base.firstElementChild.firstElementChild ? base.firstElementChild.firstElementChild.href : null;
+      result["profileName"] = base.children[1].firstElementChild.firstElementChild.firstElementChild.innerText || null;
+      result["profileTitle"] = base.children[1].children[1].firstElementChild.innerText;
+      result["companyName"] = base.children[1].children[1].children[2] ? base.children[1].children[1].children[2].innerText : null;
+      result["companyUrl"] = base.children[1].children[1].children[2] ? base.children[1].children[1].children[2].href : null;
+      result["timeInPosition"] = base.children[1].children[3].innerText;
+      result["geoLocation"] = base.children[1].children[2].firstElementChild.innerText;
 
       // Append the prospect object to the results list
       results.push(result);
+      console.log(results);
       // continue to the next prospect until all 25 are scraped
     })
 
-    // Increment page number
-    i++;
+    if (results.length == 25 * i) {
+      // Increment page number
+      i++;
 
-    // Set a second timeout of 3s
-    setTimeout(() => {
+      // Set a second timeout of 3s
       // Find the button for the next page
-      nextPageBtn = document.querySelectorAll(`[data-page-number="${i}"]`)[0];
+      nextPageBtn = document.querySelector(`li[data-test-pagination-page-btn="${i}"]`);
 
       if (!nextPageBtn) {
         // Stop the interval if there is no next page button
@@ -52,8 +62,8 @@ interval = setInterval(() => {
       // Set a third timeout of 1s to allow for injector to find the next button
       setTimeout(() => {
         // Click the next page button
-        nextPageBtn.click();
+        nextPageBtn.firstElementChild.click();
       }, 1000);
-    }, 3000);
-  }, 3000)
+    }
+  }, 10000)
 }, 10000);

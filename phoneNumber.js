@@ -3,78 +3,77 @@ const fs = require('fs');
 const path = require('path');
 const filePath = path.join(__dirname, 'prospects.json');
 const prospects = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-const https = require('https');
+const axios = require("axios");
 
-const parsePhoneNumbers = (html) => {
-  const regex = /\(?\b[2-9]\d{2}\)?[-. ]?\d{3}[-. ]?\d{4}\b/g;
-  // find all the phone numbers in the text
-  let phoneNumbers = [...new Set(html.match(regex))];
-  let cleanPhoneNumbers = [];
-  phoneNumbers.forEach((phoneNumber) => {
-    console.log(phoneNumber)
-    // remove the parentheses
-    const cleanPhoneNumber = phoneNumber.replace(/\(|\)/g, '');
-    // remove the dashs
-    const cleanPhoneNumber2 = cleanPhoneNumber.replace(/\-/g, '');
-    // remove the spaces
-    const cleanPhoneNumber3 = cleanPhoneNumber2.replace(/\s/g, '');
-    // format the 10 digit number to the format (###) ###-####
-    const formattedPhoneNumber = `(${cleanPhoneNumber3.substring(0, 3)}) ${cleanPhoneNumber3.substring(3, 6)}-${cleanPhoneNumber3.substring(6, 10)}`;
+require('dotenv').config();
 
-    cleanPhoneNumbers.push(formattedPhoneNumber);
-  });
-  phoneNumbers = [...new Set(cleanPhoneNumbers)];
-  return phoneNumbers;
-}
 
 const queryGoogle = async (query) => {
-  let phoneNumbers = []
-  let options = {
-    hostname: "https://www.google.com",
-    path: `/maps/search/${query}`,
-    method: 'GET',
+  let results;
+  let escapedQuery = encodeURI(query).replace(/%20/g, '+');
+  // make a request to the google maps api place search endpoint with the query
+  let placeConfig = {
+    method: 'get',
+    url: `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${escapedQuery}&inputtype=textquery&key=${process.env.GOOGLE_API_KEY}`
+  };
+
+  await axios(placeConfig)
+  .then(async response => {
+    if (response.status === 200 && response.data.status !== "ZERO_RESULTS") {
+      let place_id = response.data.candidates[0].place_id;
+
+      if (place_id) {
+        let detailsConfig = {
+          method: 'get',
+          url: `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place_id}&fields=formatted_phone_number,name,formatted_address,opening_hours/weekday_text,website,types,url&key=${process.env.GOOGLE_API_KEY}`
+        };
+
+        return await axios(detailsConfig)
+        .then(res => results = res.data)
+        .catch((err) => {
+          console.error("err: ", err);
+        });
+      }
+      return results;
+    }
+  })
+  .catch((error) => {
+    console.error("err: ", error);
+  })
+  return results;
+}
+
+// loop through the first 15 prospects and use the company name and company url to find the website
+(async () => {
+  for (let prospect of prospects) {
+    let companyName = prospect.companyName;
+    let queryResult;
+    await queryGoogle(companyName).then(res => {
+      if (res) {
+        queryResult = res.result
+
+        prospect.formattedAddress = JSON.stringify(queryResult["formatted_address"] || "Unknown");
+        prospect.formattedPhoneNumber = JSON.stringify(queryResult["formatted_phone_number"] || "Unknown");
+        prospect.name = JSON.stringify(queryResult["name"] || "Unknown");
+        if (queryResult["opening_hours"]) {
+          prospect.openingHours = JSON.stringify(queryResult["opening_hours"]["weekday_text"] || "Unknown");
+        } else {
+          prospect.openingHours = "Unknown";
+        }
+        prospect.types = JSON.stringify(queryResult["types"] || "Unknown");
+        prospect.url = JSON.stringify(queryResult["url"] || "Unknown");
+        prospect.website = JSON.stringify(queryResult["website"] || "Unknown");
+
+      } else {
+        prospect.formattedAddress = "Unknown"
+        prospect.formattedPhoneNumber = "Unknown"
+        prospect.name = "Unknown"
+        prospect.openingHours = "Unknown"
+        prospect.types = "Unknown"
+        prospect.url = "Unknown"
+        prospect.website = "Unknown"
+      }
+      fs.writeFileSync(filePath, JSON.stringify(prospects, null, 2));
+    });
   }
-  new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
-      res.setEncoding('utf8');
-      let responseBody = '';
-
-      res.on('data', (chunk) => {
-        responseBody += chunk;
-      });
-
-      res.on('end', () => {
-        resolve(JSON.parse(responseBody));
-      });
-    });
-
-    req.on('error', (err) => {
-        reject(err);
-    });
-
-    req.write(data)
-    req.end();
-  }).then((data) => {
-    console.log(data);
-    phoneNumbers.push(parsePhoneNumbers(data));
-    console.log(phoneNumbers)
-  });
-  return phoneNumbers;
-}
-
-// loop through the prospects and use the company name and company url to find the website
-for (let prospect of prospects) {
-  (async () => {
-    // perform a query on the company name
-    let query = prospect.companyName;
-    // append the company url to the query
-    let escapedQuery = encodeURI(query).replace(/%5B/g, '[').replace(/%5D/g, ']');
-    console.log(escapedQuery);
-    let numbers = queryGoogle(escapedQuery);
-    // append the phone numbers to the prospect object
-    console.log(numbers)
-    prospect.phoneNumbers = numbers;
-    // write the prospect object to the prospects.json file
-    fs.writeFileSync(filePath, JSON.stringify(prospects, null, 2));
-  })();
-}
+})();
