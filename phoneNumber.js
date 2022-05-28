@@ -43,37 +43,48 @@ const queryGoogle = async (query) => {
   return results;
 }
 
-// loop through the first 15 prospects and use the company name and company url to find the website
 (async () => {
   for (let prospect of prospects) {
     let companyName = prospect.companyName;
     let queryResult;
-    await queryGoogle(companyName).then(res => {
-      if (res) {
-        queryResult = res.result
+    if (companyName) {
+      await queryGoogle(companyName).then(res => {
+        if (res) {
+          queryResult = res.result
 
-        prospect.formattedAddress = JSON.stringify(queryResult["formatted_address"] || "Unknown");
-        prospect.formattedPhoneNumber = JSON.stringify(queryResult["formatted_phone_number"] || "Unknown");
-        prospect.name = JSON.stringify(queryResult["name"] || "Unknown");
-        if (queryResult["opening_hours"]) {
-          prospect.openingHours = JSON.stringify(queryResult["opening_hours"]["weekday_text"] || "Unknown");
+          prospect.formattedAddress = JSON.stringify(queryResult["formatted_address"] || "Unknown");
+          prospect.formattedPhoneNumber = JSON.stringify(queryResult["formatted_phone_number"] || "Unknown");
+          prospect.name = JSON.stringify(queryResult["name"] || "Unknown");
+          if (queryResult["opening_hours"]) {
+            prospect.openingHours = JSON.stringify(queryResult["opening_hours"]["weekday_text"] || "Unknown");
+          } else {
+            prospect.openingHours = "Unknown";
+          }
+          prospect.types = JSON.stringify(queryResult["types"] || "Unknown");
+          prospect.url = JSON.stringify(queryResult["url"] || "Unknown");
+          prospect.website = JSON.stringify(queryResult["website"] || "Unknown");
+
         } else {
-          prospect.openingHours = "Unknown";
+          prospect.formattedAddress = "Unknown"
+          prospect.formattedPhoneNumber = "Unknown"
+          prospect.name = "Unknown"
+          prospect.openingHours = "Unknown"
+          prospect.types = "Unknown"
+          prospect.url = "Unknown"
+          prospect.website = "Unknown"
         }
-        prospect.types = JSON.stringify(queryResult["types"] || "Unknown");
-        prospect.url = JSON.stringify(queryResult["url"] || "Unknown");
-        prospect.website = JSON.stringify(queryResult["website"] || "Unknown");
+        fs.writeFileSync(filePath, JSON.stringify(prospects, null, 2));
+      });
+    } else {
+      prospect.formattedAddress = "Unknown"
+      prospect.formattedPhoneNumber = "Unknown"
+      prospect.name = "Unknown"
+      prospect.openingHours = "Unknown"
+      prospect.types = "Unknown"
+      prospect.url = "Unknown"
+      prospect.website = "Unknown"
 
-      } else {
-        prospect.formattedAddress = "Unknown"
-        prospect.formattedPhoneNumber = "Unknown"
-        prospect.name = "Unknown"
-        prospect.openingHours = "Unknown"
-        prospect.types = "Unknown"
-        prospect.url = "Unknown"
-        prospect.website = "Unknown"
-      }
       fs.writeFileSync(filePath, JSON.stringify(prospects, null, 2));
-    });
+    }
   }
 })();

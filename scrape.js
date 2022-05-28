@@ -40,6 +40,7 @@ interval = setInterval(() => {
       result["geoLocation"] = base.children[1].children[2].firstElementChild.innerText;
 
       // Append the prospect object to the results list
+      // make sure that the result has all keys
       results.push(result);
       console.log(results);
       // continue to the next prospect until all 25 are scraped
@@ -52,6 +53,7 @@ interval = setInterval(() => {
       // Set a second timeout of 3s
       // Find the button for the next page
       nextPageBtn = document.querySelector(`li[data-test-pagination-page-btn="${i}"]`);
+      console.log(nextPageBtn);
 
       if (!nextPageBtn) {
         // Stop the interval if there is no next page button
@@ -65,5 +67,5 @@ interval = setInterval(() => {
         nextPageBtn.firstElementChild.click();
       }, 1000);
     }
-  }, 10000)
+  }, 8000)
 }, 10000);
