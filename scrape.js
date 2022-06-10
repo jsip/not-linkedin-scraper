@@ -31,13 +31,56 @@ interval = setInterval(() => {
       result = {};
       // Append all data to the prospect object
       base = child.firstElementChild.firstElementChild.children[1].firstElementChild.firstElementChild.firstElementChild
-      result["salesNavUrl"] = base.firstElementChild.firstElementChild ? base.firstElementChild.firstElementChild.href : null;
-      result["profileName"] = base.children[1].firstElementChild.firstElementChild.firstElementChild.innerText || null;
-      result["profileTitle"] = base.children[1].children[1].firstElementChild.innerText;
-      result["companyName"] = base.children[1].children[1].children[2] ? base.children[1].children[1].children[2].innerText : null;
-      result["companyUrl"] = base.children[1].children[1].children[2] ? base.children[1].children[1].children[2].href : null;
-      result["timeInPosition"] = base.children[1].children[3].innerText;
-      result["geoLocation"] = base.children[1].children[2].firstElementChild.innerText;
+
+      try {
+        result["salesNavUrl"] = base.firstElementChild.firstElementChild.href || "";
+      }
+      catch (e) {
+        console.log(e);
+        result["salesNavUrl"] = "";
+      }
+      try {
+        result["profileName"] = base.children[1].firstElementChild.firstElementChild.firstElementChild.innerText || "";
+      }
+      catch (e) {
+        console.log(e);
+        result["profileName"] = "";
+      }
+      try {
+        result["profileTitle"] = base.children[1].children[1].firstElementChild.innerText || "";
+      }
+      catch (e) {
+        console.log(e);
+        result["profileTitle"] = "";
+      }
+      try {
+        result["companyName"] = base.children[1].children[1].children[2].innerText || "";
+      }
+      catch (e) {
+        console.log(e);
+        result["companyName"] = "";
+      }
+      try {
+        result["companyUrl"] = base.children[1].children[1].children[2].href || "";
+      }
+      catch (e) {
+        console.log(e);
+        result["companyUrl"] = "";
+      }
+      try {
+        result["timeInPosition"] = base.children[1].children[3].innerText || "";
+      }
+      catch (e) {
+        console.log(e);
+        result["timeInPosition"] = "";
+      }
+      try {
+        result["geoLocation"] = base.children[1].children[2].firstElementChild.innerText || "";
+      }
+      catch (e) {
+        console.log(e);
+        result["geoLocation"] = "";
+      }
 
       // Append the prospect object to the results list
       // make sure that the result has all keys
@@ -52,8 +95,7 @@ interval = setInterval(() => {
 
       // Set a second timeout of 3s
       // Find the button for the next page
-      nextPageBtn = document.querySelector(`li[data-test-pagination-page-btn="${i}"]`);
-      console.log(nextPageBtn);
+      nextPageBtn = document.querySelector(`button[aria-label="Suivant"]`);
 
       if (!nextPageBtn) {
         // Stop the interval if there is no next page button
